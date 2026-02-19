@@ -42,7 +42,6 @@
                     </button>
                     
                     <div x-show="openMain" x-cloak x-transition class="ml-2 space-y-1 border-l-2 border-gray-50">
-                        {{-- Loop Nama Paket --}}
                         @forelse(\App\Models\Paket::with('steps')->get() as $paket)
                             <div x-data="{ openSteps: {{ (request()->is('admin/paket/'.$paket->id.'*') || (session('success') && $loop->last)) ? 'true' : 'false' }} }">
                                 <button @click="openSteps = !openSteps" 
@@ -51,7 +50,6 @@
                                     <svg class="w-3 h-3 transform transition-transform" :class="openSteps ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
 
-                                {{-- Loop 11 Steps --}}
                                 <div x-show="openSteps" x-cloak x-transition class="ml-8 space-y-1 border-l border-gray-200">
                                     @foreach($paket->steps as $step)
                                         <a href="{{ route('admin.paket.users', ['paketId' => $paket->id, 'step' => $step->urutan]) }}" 
@@ -105,12 +103,8 @@
             </header>
 
             <main class="p-8 overflow-y-auto bg-gray-50 flex-1">
-                @if(session('success'))
-                    <div class="max-w-4xl mx-auto mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 text-sm rounded shadow-sm">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
+                {{-- KODE ALERT HIJAU SUDAH DIHAPUS DARI SINI --}}
+                
                 @yield('content') 
             </main>
         </div>
