@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<div class="max-w-5xl mx-auto py-6">
     <div class="flex items-center justify-between mb-10 overflow-x-auto pb-4">
         @for ($i = 1; $i <= 11; $i++)
             <div class="flex flex-col items-center flex-1">
@@ -16,7 +16,7 @@
     </div>
 
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <h2 class="text-xl font-bold mb-2">Tahap {{ $step }}</h2>
+        <h2 class="text-xl font-bold mb-2 text-gray-800">Tahap {{ $step }}</h2>
         <p class="text-gray-500 mb-6">{{ $paket->nama_paket }}</p>
 
         <form action="{{ route('user.wizard.store') }}" method="POST" enctype="multipart/form-data">
@@ -26,24 +26,42 @@
 
             @if($submission && $submission->file_path)
                 <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                    <p class="text-sm text-blue-700 font-medium">File saat ini: 
-                        <a href="{{ asset('storage/'.$submission->file_path) }}" target="_blank" class="underline font-bold">Lihat Dokumen</a>
-                    </p>
+                    <p class="text-xs font-bold text-blue-800 uppercase mb-2">Dokumen Terupload:</p>
+                    <div class="space-y-1">
+                        @if(is_array($submission->file_path))
+                            @foreach($submission->file_path as $file)
+                                <a href="{{ asset('storage/'.$file) }}" target="_blank" class="block text-sm text-blue-600 underline font-medium hover:text-blue-800">
+                                    {{ basename($file) }}
+                                </a>
+                            @endforeach
+                        @else
+                            <a href="{{ asset('storage/'.$submission->file_path) }}" target="_blank" class="block text-sm text-blue-600 underline font-medium hover:text-blue-800">
+                                {{ basename($submission->file_path) }}
+                            </a>
+                        @endif
+                    </div>
                 </div>
             @endif
 
-            <div class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center">
-                <input type="file" name="file_upload" class="mx-auto block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <div class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-300 transition-colors">
+                <p class="text-gray-600 mb-4 font-medium">
+                    {{ $step == 8 ? 'Anda dapat mengunggah lebih dari satu berkas.' : 'Pilih berkas untuk diunggah.' }}
+                </p>
+                <input type="file" 
+                       name="file_upload{{ $step == 8 ? '[]' : '' }}" 
+                       {{ $step == 8 ? 'multiple' : '' }}
+                       class="mx-auto block text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
+                <p class="text-[10px] text-gray-400 mt-4">Format: PDF, JPG, PNG (Maks. 2MB)</p>
             </div>
 
             <div class="flex justify-between mt-8">
                 @if($step > 1)
-                    <a href="{{ route('user.step', [$paket->id, $step - 1]) }}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold">Sebelumnya</a>
+                    <a href="{{ route('user.step', [$paket->id, $step - 1]) }}" class="px-8 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">Sebelumnya</a>
                 @else
                     <div></div>
                 @endif
 
-                <button type="submit" name="action" value="next" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">
+                <button type="submit" name="action" value="next" class="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition">
                     {{ $step == 11 ? 'Selesai & Kirim' : 'Simpan & Lanjut' }}
                 </button>
             </div>

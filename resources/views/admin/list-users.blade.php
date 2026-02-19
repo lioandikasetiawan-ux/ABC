@@ -34,16 +34,30 @@
                             {{ $paket->nama_paket }}
                         </td>
                         <td class="px-6 py-4">
-                            @if($sub->file_path)
-                                <a href="{{ asset('storage/' . $sub->file_path) }}" target="_blank" 
-                                   class="inline-flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-lg transition border border-gray-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    Lihat Dokumen
-                                </a>
-                            @else
-                                <span class="text-gray-400 italic text-xs">Tidak ada file</span>
-                            @endif
-                        </td>
+    @if($sub->file_path)
+        <div class="flex flex-col gap-1">
+            @if(is_array($sub->file_path))
+                {{-- Penanganan jika file lebih dari satu (Step 8) --}}
+                @foreach($sub->file_path as $index => $path)
+                    <a href="{{ asset('storage/' . $path) }}" target="_blank" 
+                       class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] rounded-lg transition border border-blue-200">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Dokumen {{ $index + 1 }}
+                    </a>
+                @endforeach
+            @else
+                {{-- Penanganan jika hanya satu file --}}
+                <a href="{{ asset('storage/' . $sub->file_path) }}" target="_blank" 
+                   class="inline-flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-lg transition border border-gray-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Lihat Dokumen
+                </a>
+            @endif
+        </div>
+    @else
+        <span class="text-gray-400 italic text-xs">Tidak ada file</span>
+    @endif
+</td>
                         <td class="px-6 py-4">
                             @if($sub->status == 'approved')
                                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-full">Disetujui</span>

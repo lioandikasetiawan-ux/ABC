@@ -9,17 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class HibahWizardController extends Controller
 {
-    // 1. Pilih Paket
     public function index() {
         $pakets = Paket::all();
         return view('user.pilih-paket', compact('pakets'));
     }
 
-    // 2. Tampilkan Step Spesifik
     public function showStep($paketId, $step) {
         $paket = Paket::findOrFail($paketId);
-        
-        // Ambil data lama jika user pernah upload di step ini
         $submission = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
             ->where('step_number', $step)
@@ -28,41 +24,43 @@ class HibahWizardController extends Controller
         return view('user.wizard', compact('paket', 'step', 'submission'));
     }
 
-    // 3. Simpan (Next)
     public function store(Request $request) {
-        $request->validate([
-            'file_upload' => 'nullable|mimes:pdf,jpg,png|max:2048',
-        ]);
-
         $step = $request->step_number;
         $paketId = $request->paket_id;
 
-        // Cari data lama untuk mendapatkan path file lama jika tidak upload baru
+        // Validasi: Step 8 mengizinkan banyak file
+        if ($step == 8) {
+            $request->validate(['file_upload.*' => 'nullable|mimes:pdf,jpg,png|max:2048']);
+        } else {
+            $request->validate(['file_upload' => 'nullable|mimes:pdf,jpg,png|max:2048']);
+        }
+
         $existing = Submission::where('user_id', Auth::id())
-                               ->where('paket_id', $paketId)
-                               ->where('step_number', $step)
-                               ->first();
+            ->where('paket_id', $paketId)
+            ->where('step_number', $step)
+            ->first();
 
         $filePath = $existing ? $existing->file_path : null;
 
         if ($request->hasFile('file_upload')) {
-            $filePath = $request->file('file_upload')->store('submissions', 'public');
+            if ($step == 8) {
+                // Logika Multiple Upload
+                $paths = [];
+                foreach ($request->file('file_upload') as $file) {
+                    $paths[] = $file->store('submissions/step8', 'public');
+                }
+                $filePath = $paths; // Disimpan sebagai array
+            } else {
+                // Logika Single Upload
+                $filePath = $request->file('file_upload')->store('submissions', 'public');
+            }
         }
 
-        // Simpan atau Update
         Submission::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'paket_id' => $paketId,
-                'step_number' => $step,
-            ],
-            [
-                'file_path' => $filePath,
-                'status' => 'pending', // Reset status ke pending jika diupdate
-            ]
+            ['user_id' => Auth::id(), 'paket_id' => $paketId, 'step_number' => $step],
+            ['file_path' => $filePath, 'status' => 'pending']
         );
 
-        // Aksi Tombol
         if ($request->action == 'next' && $step < 11) {
             return redirect()->route('user.step', [$paketId, $step + 1]);
         }
