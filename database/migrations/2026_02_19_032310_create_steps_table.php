@@ -14,8 +14,8 @@ return new class extends Migration
     Schema::create('steps', function (Blueprint $table) {
         $table->id();
         $table->foreignId('paket_id')->constrained('pakets')->onDelete('cascade');
-        $table->string('nama_step'); // Contoh: "Dokumen Kontrak"
-        $table->integer('urutan');   // 1, 2, 3... sampai 11
+        $table->string('nama_step');
+        $table->integer('urutan');  
         $table->timestamps();
     });
 }

@@ -16,22 +16,17 @@ class Submission extends Model
         'catatan_admin'
     ];
 
-    // Cukup satu kali pendefinisian casts
+
     protected $casts = [
         'file_path' => 'array',
     ];
 
-    /**
-     * Relasi ke User
-     */
+   
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relasi ke Paket
-     */
     public function paket(): BelongsTo
     {
         return $this->belongsTo(Paket::class);
@@ -39,7 +34,7 @@ class Submission extends Model
 
     public function step(): BelongsTo
 {
-    // Jika step_number merujuk pada urutan, gunakan where urutan
+   
     return $this->belongsTo(Step::class, 'step_number', 'urutan');
 }
 }

@@ -12,7 +12,7 @@ class StepSeeder extends Seeder
     {
         $pakets = Paket::all();
 
-        // 11 Tahapan berdasarkan gambar Mekanisme Hibah Persediaan
+     
         $namaSteps = [
             'Pernyataan Kesediaan Menerima Hibah',
             'Permohonan Anggota Tim Internal (Sesditjen SDA)',

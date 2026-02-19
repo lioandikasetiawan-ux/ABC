@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto py-6">
+    {{-- Progress Steps --}}
     <div class="flex items-center justify-between mb-10 overflow-x-auto pb-4">
         @for ($i = 1; $i <= 11; $i++)
             <div class="flex flex-col items-center flex-1">
@@ -18,6 +19,19 @@
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
         <h2 class="text-xl font-bold mb-2 text-gray-800">Tahap {{ $step }}</h2>
         <p class="text-gray-500 mb-6">{{ $paket->nama_paket }}</p>
+
+        {{-- BAGIAN NOTIFIKASI ERROR --}}
+        @if ($errors->any())
+            <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-bounce">
+                <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-red-600 uppercase tracking-widest">Peringatan!</p>
+                    <p class="text-sm text-red-500 font-medium">{{ $errors->first() }}</p>
+                </div>
+            </div>
+        @endif
 
         <form action="{{ route('user.wizard.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -43,7 +57,7 @@
                 </div>
             @endif
 
-            <div class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-300 transition-colors">
+            <div class="border-2 border-dashed {{ $errors->has('file_upload') ? 'border-red-300 bg-red-50/30' : 'border-gray-200' }} rounded-2xl p-10 text-center hover:border-blue-300 transition-colors">
                 <p class="text-gray-600 mb-4 font-medium">
                     {{ $step == 8 ? 'Anda dapat mengunggah lebih dari satu berkas.' : 'Pilih berkas untuk diunggah.' }}
                 </p>
