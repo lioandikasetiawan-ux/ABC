@@ -5,41 +5,38 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HibahWizardController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\PaketController;
+use App\Http\Controllers\Admin\UserController;
 
-// --- Route Public ---
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// --- Route Terproteksi (Must Login) ---
 Route::middleware('auth')->group(function () {
-
- // Dashboard pilih paket
+    // USER SIDE
     Route::get('/wizard', [HibahWizardController::class, 'index'])->name('user.wizard');
-    
-    // Halaman per step
+    Route::post('/wizard/delete-file', [HibahWizardController::class, 'deleteFile'])->name('user.wizard.delete-file');
     Route::get('/wizard/paket/{paketId}/step/{step}', [HibahWizardController::class, 'showStep'])->name('user.step');
-    
-    // Proses simpan
     Route::post('/wizard/store', [HibahWizardController::class, 'store'])->name('user.wizard.store');
+    Route::get('/dashboard/progres', [HibahWizardController::class, 'progresIndex'])->name('user.progres.index');
+    Route::get('/dashboard/progres/{paketId}', [HibahWizardController::class, 'progresDetail'])->name('user.progres.detail');
 
-    // Sisi Admin (Prefix: admin)
-    Route::prefix('admin')->group(function () {
+    // ADMIN SIDE
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [MonitoringController::class, 'index'])->name('dashboard');
+        Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
         
-        // Dashboard & Monitoring Utama
-        Route::get('/dashboard', [MonitoringController::class, 'index'])->name('admin.dashboard');
-
-        // CRUD Paket (Menggunakan PaketController agar 11 step otomatis dibuat)
-        Route::post('/paket/store', [PaketController::class, 'store'])->name('admin.paket.store');
-        Route::put('/paket/{id}', [PaketController::class, 'update'])->name('admin.paket.update');
-        Route::delete('/paket/{id}', [PaketController::class, 'destroy'])->name('admin.paket.destroy');
-
-        // Monitoring & Detail Progress
-        Route::get('/paket/{paketId}/users', [MonitoringController::class, 'showUsers'])->name('admin.paket.users');
-        Route::get('/paket/{paketId}/user/{userId}', [MonitoringController::class, 'detailUser'])->name('admin.verify.detail');
+        // Menampilkan daftar user per paket (Klik dari Sidebar/Dashboard)
+        Route::get('/paket/{paketId}/users', [MonitoringController::class, 'showUsers'])->name('paket.users');
         
-        // Verifikasi Dokumen
-        Route::post('/verify/{id}', [MonitoringController::class, 'verify'])->name('admin.verify.submit');
+        // Detail Verifikasi 11 Step per User
+        Route::get('/paket/{paketId}/detail/{userId}', [MonitoringController::class, 'detailUser'])->name('paket.detail');
+        
+        // Proses Verifikasi
+        Route::post('/verify/{id}', [MonitoringController::class, 'verify'])->name('verify.submit');
+
+        // CRUD Paket
+        Route::post('/paket/store', [PaketController::class, 'store'])->name('paket.store');
+        Route::put('/paket/{id}', [PaketController::class, 'update'])->name('paket.update');
+        Route::delete('/paket/{id}', [PaketController::class, 'destroy'])->name('paket.destroy');
     });
-
 });
