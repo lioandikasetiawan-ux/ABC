@@ -15,10 +15,10 @@ class HibahSeeder extends Seeder
         // Menggunakan 'username' dan nama_satker default
         User::create([
             'name' => 'Administrator Utama',
-            'username' => 'admin', 
+            'username' => 'admin',
             'password' => Hash::make('password'),
             'role' => 'admin',
-            'nama_satker' => 'Internal BBWS', 
+            'nama_satker' => 'Internal BBWS',
         ]);
 
         // 2. Buat Akun User (Satker)
