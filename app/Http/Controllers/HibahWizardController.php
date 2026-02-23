@@ -195,5 +195,4 @@ class HibahWizardController extends Controller
         $submission->update(['file_path' => $finalPath]);
         return response()->json(['success' => true]);
     }
-
 }
