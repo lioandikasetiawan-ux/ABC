@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class HibahWizardController extends Controller
 {
-    /**
-     * Helper untuk menghitung progres paket.
-     */
     private function getPaketsWithProgress()
     {
         return Paket::all()->map(function ($paket) {
@@ -20,7 +17,6 @@ class HibahWizardController extends Controller
                 ->where('paket_id', $paket->id)
                 ->get();
 
-            // Menggunakan unique() pada Collection setelah get()
             $completedSteps = $submissions->whereNotNull('file_path')->unique('step_number')->count();
             $verifiedSteps = $submissions->whereIn('status', ['disetujui', 'verified'])->unique('step_number')->count();
 
@@ -60,7 +56,6 @@ class HibahWizardController extends Controller
     {
         $paket = Paket::findOrFail($paketId);
 
-        // PROTEKSI: Perbaikan query unique -> distinct untuk database
         $verifiedCount = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
             ->whereIn('status', ['disetujui', 'pending', 'ditolak'])
@@ -79,8 +74,6 @@ class HibahWizardController extends Controller
             ->unique('step_number')
             ->count();
 
-
-
         $submission = $userSubmissions->where('step_number', $step)->first();
         $completedStepsList = $userSubmissions->whereNotNull('file_path')->pluck('step_number')->toArray();
         $rejectedStepsList = $userSubmissions->where('status', 'ditolak')->pluck('step_number')->toArray();
@@ -96,7 +89,6 @@ class HibahWizardController extends Controller
         $paketId = $request->paket_id;
         $userId = Auth::id();
 
-        // PROTEKSI: Perbaikan query unique -> distinct
         $verifiedCount = Submission::where('user_id', $userId)
             ->where('paket_id', $paketId)
             ->whereIn('status', ['disetujui', 'verified'])
@@ -116,9 +108,10 @@ class HibahWizardController extends Controller
             return redirect()->back()->withErrors(['file_upload' => 'Berkas harus terisi.']);
         }
 
+        // PERUBAHAN: Menghapus batasan max:2048
         $request->validate([
-            'file_upload' => $step == 8 ? 'nullable' : 'nullable|mimes:pdf,jpg,png|max:2048',
-            'file_upload.*' => 'nullable|mimes:pdf,jpg,png|max:2048'
+            'file_upload' => $step == 8 ? 'nullable' : 'nullable|mimes:pdf,jpg,png',
+            'file_upload.*' => 'nullable|mimes:pdf,jpg,png'
         ]);
 
         $filePath = $existing ? $existing->file_path : null;
@@ -162,7 +155,7 @@ class HibahWizardController extends Controller
         );
 
         if ($request->action == 'next' && $step < 11) {
-            return redirect()->route('user.step', [$paketId, $step + 1]);
+            return redirect()->route('user.step', [$paketId, $step + 1])->with('success', 'File berhasil ditambahkan!');
         }
 
         return redirect()->back()->with('success', 'File berhasil disimpan.');
@@ -173,7 +166,7 @@ class HibahWizardController extends Controller
         $submission = Submission::where('user_id', Auth::id())->findOrFail($request->id);
 
         if (in_array($submission->status, ['disetujui', 'verified'])) {
-            return response()->json(['success' => false, 'message' => 'File tidak bisa dihapus karena sudah diverifikasi.'], 403);
+            return response()->json(['success' => false, 'message' => 'File tidak bisa dihapus.'], 403);
         }
 
         $files = is_array($submission->file_path) ? $submission->file_path : [$submission->file_path];
@@ -193,6 +186,9 @@ class HibahWizardController extends Controller
         }
 
         $submission->update(['file_path' => $finalPath]);
+
+        session()->flash('success', 'File berhasil dihapus!');
+
         return response()->json(['success' => true]);
     }
 }
