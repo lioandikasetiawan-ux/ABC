@@ -28,7 +28,7 @@ class HibahWizardController extends Controller
             $paket->progres_persen = ($completedSteps / 11) * 100;
             $paket->step_selesai = $completedSteps;
             $paket->step_verifikasi = $verifiedSteps;
-            
+
             return $paket;
         });
     }
@@ -59,11 +59,11 @@ class HibahWizardController extends Controller
     public function showStep($paketId, $step)
     {
         $paket = Paket::findOrFail($paketId);
-        
+
         // PROTEKSI: Perbaikan query unique -> distinct untuk database
         $verifiedCount = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
-            ->whereIn('status', ['disetujui', 'verified'])
+            ->whereIn('status', ['disetujui', 'pending', 'ditolak'])
             ->distinct()
             ->count('step_number');
 
@@ -74,14 +74,23 @@ class HibahWizardController extends Controller
         $userSubmissions = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
             ->get();
-            
+
+        $totalCompleted = $userSubmissions->whereIn('status', ['disetujui', 'pending'])
+            ->unique('step_number')
+            ->count();
+
+
+
         $submission = $userSubmissions->where('step_number', $step)->first();
         $completedStepsList = $userSubmissions->whereNotNull('file_path')->pluck('step_number')->toArray();
+        $rejectedStepsList = $userSubmissions->where('status', 'ditolak')->pluck('step_number')->toArray();
 
-        return view('user.wizard', compact('paket', 'step', 'submission', 'completedStepsList'));
+        $adminNote = $submission ? $submission->catatan_admin : null;
+
+        return view('user.wizard', compact('paket', 'step', 'submission', 'completedStepsList', 'rejectedStepsList', 'totalCompleted', 'adminNote'));
     }
 
-    public function store(Request $request) 
+    public function store(Request $request)
     {
         $step = $request->step_number;
         $paketId = $request->paket_id;
@@ -122,7 +131,7 @@ class HibahWizardController extends Controller
                 $originalName = $file->getClientOriginalName();
                 $extension = $file->getClientOriginalExtension();
                 $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
-                
+
                 $fileName = $originalName;
                 $counter = 1;
                 $folder = ($step == 8) ? 'submissions/step8' : 'submissions';
@@ -159,10 +168,10 @@ class HibahWizardController extends Controller
         return redirect()->back()->with('success', 'File berhasil disimpan.');
     }
 
-    public function deleteFile(Request $request) 
+    public function deleteFile(Request $request)
     {
         $submission = Submission::where('user_id', Auth::id())->findOrFail($request->id);
-        
+
         if (in_array($submission->status, ['disetujui', 'verified'])) {
             return response()->json(['success' => false, 'message' => 'File tidak bisa dihapus karena sudah diverifikasi.'], 403);
         }
@@ -178,7 +187,7 @@ class HibahWizardController extends Controller
         });
 
         $finalPath = count($updatedFiles) > 0 ? array_values($updatedFiles) : null;
-        
+
         if ($submission->step_number != 8 && is_array($finalPath)) {
             $finalPath = $finalPath[0] ?? null;
         }
@@ -186,4 +195,5 @@ class HibahWizardController extends Controller
         $submission->update(['file_path' => $finalPath]);
         return response()->json(['success' => true]);
     }
+
 }
