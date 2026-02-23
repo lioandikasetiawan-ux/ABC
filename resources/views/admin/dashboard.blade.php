@@ -43,7 +43,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        Kelola Database
+                        Kelola Paket
                     </span>
                 </button>
                 <button @click="openModal = true"
@@ -78,8 +78,7 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span class="font-medium text-slate-800">{{ $paket->nama_paket }}</span>
-                                        <span class="text-xs text-slate-400 mt-0.5">ID:
-                                            PAK-{{ str_pad($paket->id, 4, '0', STR_PAD_LEFT) }}</span>
+                                        
                                     </div>
                                 </td>
 
