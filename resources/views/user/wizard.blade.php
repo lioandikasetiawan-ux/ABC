@@ -1,6 +1,25 @@
 @extends('layouts.user')
 
 @section('content')
+    {{-- Alert Sukses (Muncul setelah redirect) --}}
+    @if(session('success'))
+    <div class="max-w-3xl mx-auto px-6 mt-4">
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm animate-fade-in-down">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500 text-white p-1 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="text-sm font-semibold">{{ session('success') }}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
+    </div>
+    @endif
+
     <div class="w-full px-6 py-4">
         {{-- Progress Steps --}}
         <div class="mb-8 relative">
@@ -137,7 +156,6 @@
                                             <a href="{{ asset('storage/' . $file) }}" target="_blank" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-linecap="round" stroke-linejoin="round" /></svg>
                                             </a>
-                                            {{-- Kondisi: Hanya tampil di Step 8 dan jika belum diverifikasi --}}
                                             @if($step == 8 && !in_array($submission->status, ['disetujui', 'verified']))
                                             <button type="button" onclick="deleteExistingFile('{{ $file }}', '{{ $submission->id }}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -160,7 +178,7 @@
                                 <div id="file-list" class="text-xs text-slate-600 space-y-1 mb-2 bg-slate-50 p-3 rounded-lg"></div>
                                 <button type="button" onclick="resetFileSelection(event)" class="text-xs font-medium text-rose-600 hover:text-rose-700">Hapus Pilihan</button>
                             </div>
-                            <p class="text-xs text-slate-400 mt-2">PDF, JPG, PNG (Maks. 2MB)</p>
+                            <p class="text-xs text-slate-400 mt-2">PDF, JPG, PNG</p>
                             <div class="mt-4">
                                 <div class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium shadow-sm pointer-events-none">Pilih File</div>
                             </div>
@@ -188,14 +206,24 @@
         </div>
     </div>
 
+    <style>
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { animation: fadeInDown 0.4s ease-out; }
+    </style>
+
     <script>
         let accumulatedFiles = new DataTransfer();
+
         function updateFileDisplay() {
             const input = document.getElementById('file-input-field');
             const container = document.getElementById('file-name-container');
             const fileList = document.getElementById('file-list');
             const statusText = document.getElementById('file-status-text');
             const isStep8 = "{{ $step }}" == "8";
+            
             if (input.files.length > 0) {
                 if (isStep8) {
                     Array.from(input.files).forEach(file => accumulatedFiles.items.add(file));
@@ -205,13 +233,14 @@
                 Array.from(input.files).forEach((f) => {
                     const item = document.createElement('div');
                     item.className = 'text-slate-700 text-xs flex items-center gap-2';
-                    item.innerHTML = `<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"/></svg><span class="truncate">${f.name}</span>`;
+                    item.innerHTML = `<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1.01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"/></svg><span class="truncate">${f.name}</span>`;
                     fileList.appendChild(item);
                 });
                 statusText.innerText = isStep8 ? `Terpilih (${input.files.length} file):` : "File terpilih:";
                 container.classList.remove('hidden');
             }
         }
+
         function resetFileSelection(event) {
             if (event) event.stopPropagation();
             document.getElementById('file-input-field').value = "";
@@ -220,6 +249,7 @@
             document.getElementById('file-status-text').innerText = "{{ $step == 8 ? 'Klik untuk tambah berkas' : 'Pilih berkas' }}";
             document.getElementById('file-name-container').classList.add('hidden');
         }
+
         function deleteExistingFile(filePath, submissionId) {
             if (confirm('Hapus file ini secara permanen?')) {
                 fetch("{{ route('user.wizard.delete-file') }}", {
