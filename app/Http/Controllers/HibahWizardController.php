@@ -16,15 +16,11 @@ class HibahWizardController extends Controller
     public function markAsRead($id)
     {
         $notification = Auth::user()->notifications()->findOrFail($id);
-        
-        // Tandai sudah dibaca
         $notification->markAsRead();
 
-        // Ambil paket_id dari data notifikasi
         $paketId = $notification->data['paket_id'] ?? null;
 
         if ($paketId) {
-            // Arahkan ke progres detail agar user bisa melihat progres keseluruhannya
             return redirect()->route('user.progres.detail', $paketId);
         }
 
@@ -39,10 +35,10 @@ class HibahWizardController extends Controller
                 ->get();
 
             $completedSteps = $submissions->whereNotNull('file_path')->unique('step_number')->count();
+            // Penting: Pastikan status yang dicek konsisten dengan Admin
             $verifiedSteps = $submissions->whereIn('status', ['disetujui', 'verified'])->unique('step_number')->count();
             $rejectedSteps = $submissions->where('status', 'ditolak')->unique('step_number')->count();
 
-            // Tetap mempertahankan logika persenan Anda
             $paket->progres_step = $submissions->max('step_number') ?? 0;
             $paket->progres_persen = ($completedSteps / 11) * 100;
             
@@ -81,9 +77,10 @@ class HibahWizardController extends Controller
     {
         $paket = Paket::findOrFail($paketId);
 
+        // Hanya kunci akses input jika ADMIN sudah menyetujui semua 11 step
         $verifiedCount = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
-            ->whereIn('status', ['disetujui', 'pending', 'ditolak'])
+            ->whereIn('status', ['disetujui', 'verified'])
             ->distinct()
             ->count('step_number');
 
@@ -95,10 +92,7 @@ class HibahWizardController extends Controller
             ->where('paket_id', $paketId)
             ->get();
 
-        $totalCompleted = $userSubmissions->whereIn('status', ['disetujui', 'pending'])
-            ->unique('step_number')
-            ->count();
-
+        $totalCompleted = $userSubmissions->whereNotNull('file_path')->unique('step_number')->count();
         $submission = $userSubmissions->where('step_number', $step)->first();
         $completedStepsList = $userSubmissions->whereNotNull('file_path')->pluck('step_number')->toArray();
         $rejectedStepsList = $userSubmissions->where('status', 'ditolak')->pluck('step_number')->toArray();
@@ -117,7 +111,6 @@ class HibahWizardController extends Controller
         $verifiedCount = Submission::where('user_id', $userId)
             ->where('paket_id', $paketId)
             ->whereIn('status', ['disetujui', 'verified'])
-            ->distinct()
             ->count('step_number');
 
         if ($verifiedCount >= 11) {
@@ -129,6 +122,7 @@ class HibahWizardController extends Controller
             ->where('step_number', $step)
             ->first();
 
+        // Cek jika file baru tidak ada DAN data lama juga tidak ada
         if (!$request->hasFile('file_upload') && (!$existing || empty($existing->file_path))) {
             return redirect()->back()->withErrors(['file_upload' => 'Berkas harus terisi.']);
         }
@@ -190,7 +184,7 @@ class HibahWizardController extends Controller
         $submission = Submission::where('user_id', Auth::id())->findOrFail($request->id);
 
         if (in_array($submission->status, ['disetujui', 'verified'])) {
-            return response()->json(['success' => false, 'message' => 'File tidak bisa dihapus.'], 403);
+            return response()->json(['success' => false, 'message' => 'File sudah diverifikasi dan tidak bisa dihapus.'], 403);
         }
 
         $files = is_array($submission->file_path) ? $submission->file_path : [$submission->file_path];
@@ -212,7 +206,6 @@ class HibahWizardController extends Controller
         $submission->update(['file_path' => $finalPath]);
 
         session()->flash('success', 'File berhasil dihapus!');
-
         return response()->json(['success' => true]);
     }
 }
