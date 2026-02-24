@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/progres', [HibahWizardController::class, 'progresIndex'])->name('user.progres.index');
     Route::get('/dashboard/progres/{paketId}', [HibahWizardController::class, 'progresDetail'])->name('user.progres.detail');
 
+     Route::get('/notifications/{id}/read', [HibahWizardController::class, 'markAsRead'])->name('notifications.read');
+
     // ADMIN SIDE
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [MonitoringController::class, 'index'])->name('dashboard');
@@ -38,5 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/paket/store', [PaketController::class, 'store'])->name('paket.store');
         Route::put('/paket/{id}', [PaketController::class, 'update'])->name('paket.update');
         Route::delete('/paket/{id}', [PaketController::class, 'destroy'])->name('paket.destroy');
+
+       
     });
 });

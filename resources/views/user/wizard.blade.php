@@ -44,7 +44,7 @@
                         } elseif ($isVerified) {
                             $circleClass = 'bg-emerald-500 text-white hover:bg-emerald-600';
                         } elseif ($isCompleted) {
-                            $circleClass = 'bg-slate-300 text-slate-700 hover:bg-slate-400';
+                            $circleClass = 'bg-[#FEE15D] text-slate-700 hover:bg-slate-400';
                         }
                     @endphp
 

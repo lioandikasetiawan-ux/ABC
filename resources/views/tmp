@@ -10,27 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class HibahWizardController extends Controller
 {
-    /**
-     * Menandai notifikasi sebagai terbaca dan mengarahkan ke paket terkait.
-     */
-    public function markAsRead($id)
-    {
-        $notification = Auth::user()->notifications()->findOrFail($id);
-        
-        // Tandai sudah dibaca
-        $notification->markAsRead();
-
-        // Ambil paket_id dari data notifikasi
-        $paketId = $notification->data['paket_id'] ?? null;
-
-        if ($paketId) {
-            // Arahkan ke progres detail agar user bisa melihat progres keseluruhannya
-            return redirect()->route('user.progres.detail', $paketId);
-        }
-
-        return redirect()->route('user.wizard');
-    }
-
     private function getPaketsWithProgress()
     {
         return Paket::all()->map(function ($paket) {
@@ -40,15 +19,11 @@ class HibahWizardController extends Controller
 
             $completedSteps = $submissions->whereNotNull('file_path')->unique('step_number')->count();
             $verifiedSteps = $submissions->whereIn('status', ['disetujui', 'verified'])->unique('step_number')->count();
-            $rejectedSteps = $submissions->where('status', 'ditolak')->unique('step_number')->count();
 
-            // Tetap mempertahankan logika persenan Anda
             $paket->progres_step = $submissions->max('step_number') ?? 0;
             $paket->progres_persen = ($completedSteps / 11) * 100;
-            
             $paket->step_selesai = $completedSteps;
             $paket->step_verifikasi = $verifiedSteps;
-            $paket->step_ditolak = $rejectedSteps;
 
             return $paket;
         });
@@ -133,6 +108,7 @@ class HibahWizardController extends Controller
             return redirect()->back()->withErrors(['file_upload' => 'Berkas harus terisi.']);
         }
 
+        // PERUBAHAN: Menghapus batasan max:2048
         $request->validate([
             'file_upload' => $step == 8 ? 'nullable' : 'nullable|mimes:pdf,jpg,png',
             'file_upload.*' => 'nullable|mimes:pdf,jpg,png'

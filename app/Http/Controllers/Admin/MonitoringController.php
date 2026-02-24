@@ -7,6 +7,8 @@ use App\Models\Paket;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
+// Import Notification Class
+use App\Notifications\AdminActionNotification;
 
 class MonitoringController extends Controller
 {
@@ -76,18 +78,16 @@ class MonitoringController extends Controller
         return redirect()->route('admin.paket.detail', ['paketId' => $paketId, 'userId' => $userId]);
     }
 
+    public function detailUser($paketId, $userId) {
+        $user = User::findOrFail($userId);
+        $paket = Paket::findOrFail($paketId);
+        $submissions = Submission::where('user_id', $userId)
+                                 ->where('paket_id', $paketId)
+                                 ->get()
+                                 ->keyBy('step_number');
 
-public function detailUser($paketId, $userId) {
-    $user = User::findOrFail($userId);
-    $paket = Paket::findOrFail($paketId);
-    $submissions = Submission::where('user_id', $userId)
-                             ->where('paket_id', $paketId)
-                             ->get()
-                             ->keyBy('step_number');
-
-    // Pastikan titik (.) memisahkan folder dengan benar
-    return view('admin.verifikasi-detail', compact('user', 'paket', 'submissions'));
-}
+        return view('admin.verifikasi-detail', compact('user', 'paket', 'submissions'));
+    }
 
     public function verify(Request $request, $id) {
         $request->validate([
@@ -98,6 +98,7 @@ public function detailUser($paketId, $userId) {
         $submission = Submission::findOrFail($id);
         $status = $request->status;
 
+        // Normalisasi Status
         if ($status === 'verified') $status = 'disetujui';
         if ($status === 'rejected') $status = 'ditolak';
 
@@ -105,6 +106,20 @@ public function detailUser($paketId, $userId) {
             'status' => $status,
             'catatan_admin' => $request->catatan_admin
         ]);
+
+        // Kirim Notifikasi ke User
+        $user = User::find($submission->user_id);
+        if ($user) {
+            $message = $status === 'disetujui' 
+                ? "telah memverifikasi dokumen Step {$submission->step_number}" 
+                : "menolak dokumen Step {$submission->step_number}";
+
+            $user->notify(new AdminActionNotification([
+                'status' => $status,
+                'message' => $message,
+                'paket_id' => $submission->paket_id // Menambahkan data yang dibutuhkan notifikasi
+            ]));
+        }
 
         return redirect()->route('admin.paket.detail', [$submission->paket_id, $submission->user_id])
                          ->with('success', 'Status verifikasi berhasil diperbarui!');
