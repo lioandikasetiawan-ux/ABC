@@ -28,7 +28,12 @@
                         </div>
                     </div>
 
-                    <form x-data="{ paketId: '' }" :action="'/wizard/paket/' + paketId + '/step/1'" method="GET" class="space-y-6">
+                    {{-- PERBAIKAN: Menggunakan url() agar tidak 404 di server sub-folder --}}
+                    <form x-data="{ paketId: '' }" 
+                          :action="'{{ url('/wizard/paket') }}/' + paketId + '/step/1'" 
+                          method="GET" 
+                          class="space-y-6">
+                        
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-2 text-center">
                                 Pilih Paket Pekerjaan
@@ -41,7 +46,7 @@
                                     @foreach ($pakets as $paket)
                                         @php
                                             $isLocked = $paket->step_verifikasi >= 11;
-                                            $isTaken = $paket->is_taken_by_other; // Logika baru: Sudah diisi user lain
+                                            $isTaken = $paket->is_taken_by_other; 
                                             $progress = round($paket->progres_persen ?? 0);
                                         @endphp
                                         <option value="{{ $paket->id }}" {{ ($isLocked || $isTaken) ? 'disabled' : '' }}
@@ -74,17 +79,19 @@
                         </button>
 
                         {{-- Pesan Peringatan --}}
-                        <div x-show="paketId && $el.closest('form').querySelector('option:checked').disabled" x-cloak
-                            class="mt-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <p class="text-xs font-medium text-amber-700">
-                                    Paket ini tidak dapat dipilih karena sudah dikerjakan user lain atau sudah terkunci.
-                                </p>
+                        <template x-if="paketId">
+                            <div x-show="$el.closest('form').querySelector('option:checked').disabled"
+                                class="mt-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <p class="text-xs font-medium text-amber-700">
+                                        Paket ini tidak dapat dipilih karena sudah dikerjakan user lain atau sudah terkunci.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        </template>
                     </form>
                 </div>
             </div>
