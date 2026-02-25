@@ -1,7 +1,7 @@
 @extends('layouts.user')
 
 @section('content')
-    {{-- Alert Sukses (Muncul setelah redirect) --}}
+    {{-- Alert Sukses --}}
     @if(session('success'))
     <div class="max-w-3xl mx-auto px-6 mt-4">
         <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm animate-fade-in-down">
@@ -20,11 +20,27 @@
     </div>
     @endif
 
+    @php
+        $stepNames = [
+            1 => 'Pernyataan Kesiapan Menerima Hibah',
+            2 => 'Surat Pengajuan Permohonan Anggota Tim Internal ke Biro PBMN',
+            3 => 'SK Tim Internal Balai',
+            4 => 'BA Penelitian Tim Internal',
+            5 => 'Sara Teknis Kabalai berdasarkan BA ke Sesditjen SDA',
+            6 => 'Rekomtek dan Permohonan Persetujuan Hibah ke Sekjend',
+            7 => 'Surat Persetujuan/Penolakan Permohonan Hibah',
+            8 => 'BAST dan Naskah Hibah Satker',
+            9 => 'SK Penghapusan BMN Satker',
+            10 => 'Bukti Hibah Keluar dari SAKTI',
+            11 => 'Laporan Pelaksanaan Hibah ke KPKNL'
+        ];
+    @endphp
+
     <div class="w-full px-6 py-4">
         {{-- Progress Steps --}}
-        <div class="mb-8 relative">
+        <div class="mb-12 relative">
             <div class="absolute top-4 left-0 w-full h-0.5 bg-slate-200 -z-10"></div>
-            <div class="flex justify-between overflow-x-auto pb-2 gap-1">
+            <div class="flex justify-between overflow-x-auto pb-6 gap-2 no-scrollbar">
                 @for ($i = 1; $i <= 11; $i++)
                     @php
                         $isCurrent = $step == $i;
@@ -48,7 +64,7 @@
                         }
                     @endphp
 
-                    <div class="flex flex-col items-center min-w-[45px] relative z-10">
+                    <div class="flex flex-col items-center min-w-[100px] text-center relative z-10">
                         @if ($canNavigate)
                             <a href="{{ route('user.step', [$paket->id, $i]) }}"
                                 class="w-9 h-9 rounded-xl flex items-center justify-center font-semibold text-sm transition-all {{ $circleClass }}">
@@ -69,14 +85,16 @@
                                 <span class="text-xs">{{ $i }}</span>
                             </div>
                         @endif
-                        <span class="text-[9px] font-medium mt-1.5 {{ $isCurrent ? 'text-indigo-600' : ($isRejected ? 'text-rose-600' : ($isVerified ? 'text-emerald-600' : 'text-slate-400')) }}">
-                            S{{ $i }}
+                        
+                        {{-- Nama Step Singkat/Deskripsi di bawah lingkaran --}}
+                        <span class="text-[9px] leading-tight font-medium mt-2 max-w-[90px] line-clamp-2 {{ $isCurrent ? 'text-indigo-600 font-bold' : ($isRejected ? 'text-rose-600' : ($isVerified ? 'text-emerald-600' : 'text-slate-400')) }}">
+                            {{ $stepNames[$i] }}
                         </span>
                     </div>
 
                     @if ($i < 11)
                         @php $lineColor = $isVerified ? 'bg-emerald-500' : ($isRejected ? 'bg-rose-500' : 'bg-slate-200'); @endphp
-                        <div class="flex-1 h-0.5 mt-4 {{ $lineColor }}"></div>
+                        <div class="flex-1 h-0.5 mt-4 min-w-[20px] {{ $lineColor }}"></div>
                     @endif
                 @endfor
             </div>
@@ -89,7 +107,8 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <div class="w-1 h-5 bg-indigo-600 rounded-full"></div>
-                            <h2 class="text-lg font-semibold text-slate-800">Tahap {{ $step }}</h2>
+                            {{-- Nama Tahap Sesuai Deskripsi --}}
+                            <h2 class="text-lg font-semibold text-slate-800">{{ $stepNames[$step] }}</h2>
                         </div>
                         <p class="text-sm text-slate-500 ml-3">{{ $paket->nama_paket }}</p>
                     </div>
@@ -212,6 +231,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-down { animation: fadeInDown 0.4s ease-out; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
     <script>

@@ -29,13 +29,20 @@ class HibahWizardController extends Controller
 
     private function getPaketsWithProgress()
     {
-        return Paket::all()->map(function ($paket) {
-            $submissions = Submission::where('user_id', Auth::id())
+        $currentUserId = Auth::id();
+
+        return Paket::all()->map(function ($paket) use ($currentUserId) {
+            // 1. Cek apakah ada user LAIN yang sudah mengisi paket ini (Klaim)
+            $otherUserSubmission = Submission::where('paket_id', $paket->id)
+                ->where('user_id', '!=', $currentUserId)
+                ->exists();
+
+            // 2. Ambil submission milik user SEKARANG
+            $submissions = Submission::where('user_id', $currentUserId)
                 ->where('paket_id', $paket->id)
                 ->get();
 
             $completedSteps = $submissions->whereNotNull('file_path')->unique('step_number')->count();
-            // Penting: Pastikan status yang dicek konsisten dengan Admin
             $verifiedSteps = $submissions->whereIn('status', ['disetujui', 'verified'])->unique('step_number')->count();
             $rejectedSteps = $submissions->where('status', 'ditolak')->unique('step_number')->count();
 
@@ -45,6 +52,9 @@ class HibahWizardController extends Controller
             $paket->step_selesai = $completedSteps;
             $paket->step_verifikasi = $verifiedSteps;
             $paket->step_ditolak = $rejectedSteps;
+
+            // 3. Tambahkan status klaim untuk di View
+            $paket->is_taken_by_other = $otherUserSubmission;
 
             return $paket;
         });
@@ -65,6 +75,16 @@ class HibahWizardController extends Controller
     public function progresDetail($paketId)
     {
         $paket = Paket::findOrFail($paketId);
+
+        // Proteksi: Jika paket ternyata milik user lain, jangan izinkan buka detail progres
+        $isTaken = Submission::where('paket_id', $paketId)
+                    ->where('user_id', '!=', Auth::id())
+                    ->exists();
+        
+        if ($isTaken) {
+            return redirect()->route('user.progres.index')->with('error', 'Maaf, data paket ini milik user lain.');
+        }
+
         $submissions = Submission::where('user_id', Auth::id())
             ->where('paket_id', $paketId)
             ->get()
@@ -76,6 +96,15 @@ class HibahWizardController extends Controller
     public function showStep($paketId, $step)
     {
         $paket = Paket::findOrFail($paketId);
+
+        // PROTEKSI: Jika paket sudah diisi/diklaim oleh user lain, tendang balik
+        $isTaken = Submission::where('paket_id', $paketId)
+                    ->where('user_id', '!=', Auth::id())
+                    ->exists();
+        
+        if ($isTaken) {
+            return redirect()->route('user.wizard')->with('error', 'Maaf, paket ini sudah dikerjakan oleh user lain.');
+        }
 
         // Hanya kunci akses input jika ADMIN sudah menyetujui semua 11 step
         $verifiedCount = Submission::where('user_id', Auth::id())
@@ -108,6 +137,15 @@ class HibahWizardController extends Controller
         $paketId = $request->paket_id;
         $userId = Auth::id();
 
+        // PROTEKSI DOUBLE: Cek lagi sebelum simpan apakah sudah diklaim user lain
+        $isTaken = Submission::where('paket_id', $paketId)
+                    ->where('user_id', '!=', $userId)
+                    ->exists();
+        
+        if ($isTaken) {
+            return redirect()->route('user.wizard')->with('error', 'Gagal menyimpan. Paket sudah diklaim user lain.');
+        }
+
         $verifiedCount = Submission::where('user_id', $userId)
             ->where('paket_id', $paketId)
             ->whereIn('status', ['disetujui', 'verified'])
@@ -122,7 +160,6 @@ class HibahWizardController extends Controller
             ->where('step_number', $step)
             ->first();
 
-        // Cek jika file baru tidak ada DAN data lama juga tidak ada
         if (!$request->hasFile('file_upload') && (!$existing || empty($existing->file_path))) {
             return redirect()->back()->withErrors(['file_upload' => 'Berkas harus terisi.']);
         }

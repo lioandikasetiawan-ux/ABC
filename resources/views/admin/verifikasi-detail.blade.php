@@ -19,7 +19,7 @@
         {{-- Header Section --}}
         <div
             class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-            <div>
+            <div class="flex-1">
                 <a href="{{ route('admin.dashboard') }}"
                     class="inline-flex items-center text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors mb-4 group">
                     <svg class="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" fill="none"
@@ -28,13 +28,33 @@
                     </svg>
                     Kembali ke Dashboard
                 </a>
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-1 h-8 bg-indigo-600 rounded-full"></div>
-                    <h2 class="text-2xl font-bold text-slate-800">Verifikasi: {{ $user->name }}</h2>
-                </div>
-                <div class="flex items-center gap-2 ml-4">
-                    <span class="text-xs font-medium text-slate-400">Paket:</span>
-                    <span class="text-sm font-semibold text-indigo-600">{{ $paket->nama_paket }}</span>
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-1 h-8 bg-indigo-600 rounded-full"></div>
+                            <h2 class="text-2xl font-bold text-slate-800">Verifikasi: {{ $user->name }}</h2>
+                        </div>
+                        <div class="flex items-center gap-2 ml-4">
+                            <span class="text-xs font-medium text-slate-400">Paket:</span>
+                            <span class="text-sm font-semibold text-indigo-600">{{ $paket->nama_paket }}</span>
+                        </div>
+                    </div>
+
+                    {{-- TOMBOL RESET DATA (DITAMBAHKAN DI SINI) --}}
+                    <div class="md:ml-6">
+                        <form action="{{ route('admin.monitoring.reset', [$paket->id, $user->id]) }}" method="POST"
+                            onsubmit="return confirm('PERHATIAN! Anda akan menghapus SEMUA dokumen yang sudah diunggah user ini untuk paket ini. Data akan dipindahkan ke riwayat. Lanjutkan?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" 
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 text-xs font-bold rounded-xl hover:bg-rose-600 hover:text-white transition-all border border-rose-100 uppercase tracking-wider">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Reset Progres User
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 

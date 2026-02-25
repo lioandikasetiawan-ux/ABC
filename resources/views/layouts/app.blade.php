@@ -65,70 +65,38 @@
 
                 @if (Auth::user()->role == 'admin')
                     {{-- Paket Kerja Section --}}
-                    <div x-data="{ openMain: true }" class="space-y-3">
-                        <button @click="openMain = !openMain"
-                            class="w-full flex items-center justify-between px-4 py-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                    <div class="space-y-3">
+                        <div class="px-4 py-2 text-slate-400">
                             <span class="text-xs font-semibold uppercase tracking-wider">Daftar Paket Kerja</span>
-                            <svg class="w-4 h-4 transition-transform duration-200" :class="openMain ? 'rotate-180' : ''"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                <path d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
+                        </div>
 
-                        <div x-show="openMain" x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0" class="space-y-2">
+                        <div class="space-y-2">
                             @php
                                 $pakets = \App\Models\Paket::with(['submissions.user'])->get();
                             @endphp
 
                             @foreach ($pakets as $paket)
-                                <div x-data="{ openUser: {{ request()->is('admin/paket/' . $paket->id . '*') ? 'true' : 'false' }} }" class="space-y-1">
-                                    {{-- Button Nama Paket --}}
-                                    <button @click="openUser = !openUser"
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->is('admin/paket/' . $paket->id . '*') ? 'bg-indigo-50' : 'hover:bg-slate-50' }}">
-                                        <div class="w-1 h-5 bg-amber-400 rounded-full"></div>
-                                        <span
-                                            class="text-sm font-medium text-slate-700 flex-1 text-left">{{ $paket->nama_paket }}</span>
-                                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200"
-                                            :class="openUser ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="2">
-                                            <path d="M19 9l-7 7-7-7" />
+                                @php
+                                    // Karena 1 paket = 1 user, ambil submission pertama untuk mendapatkan user_id
+                                    $submission = $paket->submissions->first();
+                                    $isActive = request()->segment(3) == $paket->id;
+                                @endphp
+
+                                @if ($submission && $submission->user)
+                                    <a href="{{ route('admin.paket.detail', [$paket->id, $submission->user_id]) }}"
+                                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ $isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                                        <div class="w-1 h-5 {{ $isActive ? 'bg-indigo-600' : 'bg-amber-400' }} rounded-full"></div>
+                                        <span class="text-xs font-medium truncate flex-1">{{ $paket->nama_paket }}</span>
+                                        <svg class="w-4 h-4 {{ $isActive ? 'text-indigo-600' : 'text-slate-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
-                                    </button>
-
-                                    {{-- Daftar User --}}
-                                    <div x-show="openUser" x-cloak x-transition:enter="transition ease-out duration-150"
-                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                        class="ml-7 pl-4 border-l-2 border-slate-100 space-y-1">
-                                        @php
-                                            $uniqueUsers = $paket->submissions->unique('user_id');
-                                        @endphp
-
-                                        @forelse($uniqueUsers as $sub)
-                                            @if ($sub->user)
-                                                <a href="{{ route('admin.paket.detail', [$paket->id, $sub->user_id]) }}"
-                                                    class="group flex items-center justify-between py-2 px-3 rounded-lg transition-all {{ request()->segment(3) == $paket->id && request()->segment(5) == $sub->user_id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600' }}">
-                                                    <div class="flex items-center gap-2 overflow-hidden">
-                                                        <div
-                                                            class="w-1.5 h-1.5 rounded-full {{ request()->segment(3) == $paket->id && request()->segment(5) == $sub->user_id ? 'bg-white' : 'bg-indigo-400' }}">
-                                                        </div>
-                                                        <span
-                                                            class="text-xs font-medium truncate">{{ $sub->user->name }}</span>
-                                                    </div>
-                                                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity {{ request()->segment(3) == $paket->id && request()->segment(5) == $sub->user_id ? 'opacity-100' : '' }}"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                        stroke-width="2">
-                                                        <path d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </a>
-                                            @endif
-                                        @empty
-                                            <span class="block py-2 px-3 text-xs text-slate-400 italic">Belum ada
-                                                pengunggah</span>
-                                        @endforelse
+                                    </a>
+                                @else
+                                    <div class="flex items-center gap-3 px-4 py-2.5 opacity-50 cursor-not-allowed">
+                                        <div class="w-1 h-5 bg-slate-300 rounded-full"></div>
+                                        <span class="text-xs font-medium text-slate-400 truncate">{{ $paket->nama_paket }}</span>
                                     </div>
-                                </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -144,6 +112,14 @@
                                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
                             <span class="text-sm font-medium">User Akses</span>
+                        </a>
+                        {{-- Menu Riwayat --}}
+                        <a href="{{ route('admin.riwayat.index') }}"
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('admin.riwayat.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-sm font-medium">Riwayat Aktivitas</span>
                         </a>
                     </div>
                 @endif

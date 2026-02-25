@@ -7,7 +7,7 @@ use App\Models\Paket;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
-// Import Notification Class
+use Illuminate\Support\Facades\DB;
 use App\Notifications\AdminActionNotification;
 
 class MonitoringController extends Controller
@@ -60,6 +60,16 @@ class MonitoringController extends Controller
         if ($verified == 11) return 'SELESAI';
         if ($uploaded > $verified) return 'PERLU VERIF';
         return 'ON PROGRESS';
+    }
+
+    // Method Baru untuk Halaman Riwayat Aktivitas
+    public function riwayatIndex() 
+    {
+        $histories = DB::table('submission_histories')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.riwayat.index', compact('histories'));
     }
 
     public function showUsers(Request $request, $paketId) 
@@ -117,11 +127,35 @@ class MonitoringController extends Controller
             $user->notify(new AdminActionNotification([
                 'status' => $status,
                 'message' => $message,
-                'paket_id' => $submission->paket_id // Menambahkan data yang dibutuhkan notifikasi
+                'paket_id' => $submission->paket_id 
             ]));
         }
 
         return redirect()->route('admin.paket.detail', [$submission->paket_id, $submission->user_id])
                          ->with('success', 'Status verifikasi berhasil diperbarui!');
+    }
+
+    public function resetUserSubmission($paketId, $userId)
+    {
+        $paket = Paket::findOrFail($paketId);
+        $user = User::findOrFail($userId);
+        $submissions = Submission::where('paket_id', $paketId)->where('user_id', $userId);
+        $count = $submissions->count();
+
+        // 1. Catat ke Riwayat
+        DB::table('submission_histories')->insert([
+            'nama_paket' => $paket->nama_paket,
+            'nama_pengunggah' => $user->name,
+            'total_dokumen' => $count,
+            'aksi' => 'RESET DATA',
+            'di_eksekusi_oleh' => auth()->user()->name,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 2. Hapus Data
+        $submissions->delete();
+
+        return back()->with('success', "Data milik {$user->name} berhasil direset dan dipindahkan ke riwayat.");
     }
 }
