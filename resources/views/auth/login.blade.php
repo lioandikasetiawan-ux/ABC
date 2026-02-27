@@ -35,9 +35,9 @@
 
         {{-- Logo & Header --}}
         <div class="text-center mb-8 mt-4">
-            <div
-                class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-xl mb-4 shadow-lg shadow-indigo-200">
-                <span class="text-2xl font-bold text-white">EH</span>
+            {{-- PERBAIKAN: Mengganti kontainer EH dengan Logo PUPR --}}
+            <div class="inline-flex items-center justify-center w-20 h-20 mb-4">
+                <img src="{{ asset('images/logo-pupr.png') }}" alt="Logo PUPR" class="w-full h-full object-contain">
             </div>
             <h1 class="text-2xl font-bold text-slate-800">E-HIBAH BBWS</h1>
             <p class="text-sm text-slate-500 mt-1">Masuk ke portal monitoring hibah</p>

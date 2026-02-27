@@ -39,13 +39,13 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
+                    <div class="w-12 h-12 flex items-center justify-center overflow-hidden">
+                        <img src="{{ asset('images/logo-pupr.png') }}" alt="Logo PUPR" class="w-full h-full object-contain">
+                    </div>
                 </div>
                 <div class="flex flex-col">
                     <span class="font-extrabold text-slate-900 tracking-tight leading-none text-lg">E-HIBAH</span>
-                    <span class="text-[10px] font-bold text-indigo-600 tracking-[0.2em] uppercase">BBWS Portal</span>
+                    <span class="text-[10px] font-bold text-indigo-600 tracking-[0.2em] uppercase">BBWS Cimanuk Cisanggarung</span>
                 </div>
             </div>
 
